@@ -73,7 +73,7 @@ dependencies:
   animate_do: 3.3.4
   share_plus: 10.1.1
   syncfusion_flutter_charts: 27.1.48
-  archive: 3.6.1
+  archive: ^4.0.2
   # https://github.com/ponnamkarthik/FlutterToast/pull/542
   fluttertoast: 
     git: 
