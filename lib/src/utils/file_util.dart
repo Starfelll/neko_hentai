@@ -9,7 +9,7 @@ class FileUtil {
 
   static bool isImageExtension(String path) {
     String s = path.toLowerCase();
-    return s.endsWith('.jpg') || s.endsWith('.png') || s.endsWith('.gif') || s.endsWith('.jpeg') || s.endsWith('.webp');
+    return s.endsWith('.jpg') || s.endsWith('.png') || s.endsWith('.gif') || s.endsWith('.jpeg') || s.endsWith('.webp') || s.endsWith('.jxl') || s.endsWith('.avif');
   }
 
   static bool isJHenTaiGalleryDirectory(Directory directory) {
