@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:jhentai/src/config/ui_config.dart';
 import 'package:jhentai/src/extension/dio_exception_extension.dart';
 import 'package:jhentai/src/extension/widget_extension.dart';
@@ -87,7 +88,9 @@ class _EHArchiveDialogState extends State<EHArchiveDialog> {
           text: 'resample'.tr,
           callback: _canAffordDownload(isOriginal: false)
               ? () => backRoute(
-                    result: (isOriginal: false, size: _computeSizeInBytes(isOriginal: false), group: group),
+                    result: (isOriginal: false, 
+                             size: _computeSizeInBytes(isOriginal: false), 
+                             group: group, importFile: null),
                   )
               : null,
         ),
@@ -97,9 +100,26 @@ class _EHArchiveDialogState extends State<EHArchiveDialog> {
           text: 'original'.tr,
           callback: _canAffordDownload(isOriginal: true)
               ? () => backRoute(
-                    result: (isOriginal: true, size: _computeSizeInBytes(isOriginal: true), group: group),
+                    result: (isOriginal: true, 
+                             size: _computeSizeInBytes(isOriginal: true), 
+                             group: group, importFile: null),
                   )
               : null,
+        ),
+        _ArchiveButtonSet(
+          cost: "",
+          size: archive.originalSize,
+          text: 'import'.tr,
+          callback: () async {
+            var filePath = await FilePicker.platform.pickFiles();
+            if (filePath != null && filePath.files.first.path != null) {
+              backRoute(result: (isOriginal: true, 
+                                 size: _computeSizeInBytes(isOriginal: true), 
+                                 group: group,
+                                 importFile: filePath.files.first.path!)
+              );
+            }
+          }
         ),
       ],
     );

@@ -640,7 +640,7 @@ class DetailsPageLogic extends GetxController with LoginRequiredMixin, Scroll2To
         return;
       }
 
-      ({bool isOriginal, int size, String group})? result = await Get.dialog(
+      ({bool isOriginal, int size, String group, String? importFile})? result = await Get.dialog(
         EHArchiveDialog(
           title: 'chooseArchive'.tr,
           archivePageUrl: state.galleryDetails!.archivePageUrl,
@@ -672,7 +672,12 @@ class DetailsPageLogic extends GetxController with LoginRequiredMixin, Scroll2To
         tags: state.galleryDetails != null ? tagMap2TagString(state.galleryDetails!.tags) : tagMap2TagString(state.gallery!.tags),
         tagRefreshTime: DateTime.now().toString(),
       );
-      archiveDownloadService.downloadArchive(archive);
+
+      if (result.importFile != null) {
+        archiveDownloadService.importArchive(archive, result.importFile!);
+      } else {
+        archiveDownloadService.downloadArchive(archive);
+      }
 
       updateGlobalGalleryStatus();
 

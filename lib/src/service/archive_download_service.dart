@@ -137,6 +137,33 @@ class ArchiveDownloadService extends GetxController with GridBasePageServiceMixi
     await _unpackingArchive(archive);
   }
 
+  Future<void> importArchive(ArchiveDownloadedData archive, String filePath) async {
+    await _ensureDownloadDirExists();
+
+    log.info('Begin to import archive: ${archive.title}, file: $filePath');
+
+    File importFile = File(filePath);
+    if (!importFile.existsSync()) {
+      log.error("Importing archive error! Archive file does not exist.");
+    }
+    if (importFile.statSync().size < archive.size) {
+      log.error("Importing archive error! Archive file size mismatch.");
+    }
+
+    if (archiveDownloadInfos.containsKey(archive.gid)) {
+      return;
+    }
+    if (!await _initArchiveInfo(archive)) {
+      return;
+    }
+    _generateComicInfoInDisk(archive);
+
+    var archiveDownloadInfo = archiveDownloadInfos[archive.gid]!;
+    archiveDownloadInfo.archiveStatus = ArchiveStatus.downloaded;
+
+    await _unpackingArchive(archive, filePath);
+  }
+
   Future<void> deleteArchive(int gid) async {
     ArchiveDownloadedData? archive = archives.firstWhereOrNull((archive) => archive.gid == gid);
     if (archive != null) {
@@ -923,7 +950,7 @@ class ArchiveDownloadService extends GetxController with GridBasePageServiceMixi
     return _updateArchiveStatus(archive.gid, ArchiveStatus.downloaded);
   }
 
-  Future<void> _unpackingArchive(ArchiveDownloadedData archive) async {
+  Future<void> _unpackingArchive(ArchiveDownloadedData archive, [String? filePath]) async {
     ArchiveDownloadInfo archiveDownloadInfo = archiveDownloadInfos[archive.gid]!;
     if (!_isTaskInStatus(archive.gid, [ArchiveStatus.downloaded, ArchiveStatus.unpacking])) {
       return;
@@ -932,7 +959,7 @@ class ArchiveDownloadService extends GetxController with GridBasePageServiceMixi
     log.info('Unpacking archive: ${archive.title}, original: ${archive.isOriginal}');
 
     bool success = await extractZipArchive(
-      computePackingFileDownloadPath(archive),
+      filePath ?? computePackingFileDownloadPath(archive),
       computeArchiveUnpackingPath(archive.title, archive.gid),
     );
 
@@ -944,11 +971,13 @@ class ArchiveDownloadService extends GetxController with GridBasePageServiceMixi
       archiveDownloadInfo.archiveStatus = ArchiveStatus.downloading;
       await archiveDownloadInfo.downloadTask!.dispose();
       archiveDownloadInfo.downloadTask = null;
-      await _deletePackingFileInDisk(archive);
+      if (filePath == null) {
+        await _deletePackingFileInDisk(archive);
+      }
       return pauseDownloadArchive(archive.gid);
     }
 
-    if (downloadSetting.deleteArchiveFileAfterDownload.isTrue) {
+    if (filePath == null && downloadSetting.deleteArchiveFileAfterDownload.isTrue) {
       _deletePackingFileInDisk(archive);
     }
 
